@@ -14,6 +14,7 @@
 #include <sbi/sbi_platform.h>
 #include <sbi/sbi_scratch.h>
 #include <sbi/sbi_timer.h>
+#include <sbi/sbi_console.h>
 
 static unsigned long time_delta_off;
 static u64 (*get_time_val)(const struct sbi_platform *plat);
@@ -78,8 +79,19 @@ void sbi_timer_set_delta_upper(ulong delta_upper)
 	*time_delta |= ((u64)delta_upper << 32);
 }
 
+static struct
+{
+	u32 counter;
+	u32 rounds;
+	u32 last_timestamp;
+	u64 expired;
+} timer_data = {};
+
 void sbi_timer_event_start(u64 next_event)
 {
+	if (!timer_data.counter && !timer_data.rounds) {
+		sbi_printf("%s, timer data %p\n", __func__, &timer_data);
+	}
 	sbi_platform_timer_event_start(sbi_platform_thishart_ptr(), next_event);
 	csr_clear(CSR_MIP, MIP_STIP);
 	csr_set(CSR_MIE, MIP_MTIP);
@@ -87,6 +99,17 @@ void sbi_timer_event_start(u64 next_event)
 
 void sbi_timer_process(void)
 {
+	u32 current = csr_read(CSR_MCYCLE);
+	u32 delta = current - timer_data.last_timestamp;
+	timer_data.counter++;
+	timer_data.expired += delta;
+	if (timer_data.expired >> 32) {
+		timer_data.rounds++;
+		timer_data.expired &= 0xffffffff;
+		sbi_printf("%s: %d@%d\n", __func__, timer_data.counter, timer_data.rounds);
+		timer_data.counter = 0;
+	}
+	timer_data.last_timestamp = current;
 	csr_clear(CSR_MIE, MIP_MTIP);
 	csr_set(CSR_MIP, MIP_STIP);
 }
