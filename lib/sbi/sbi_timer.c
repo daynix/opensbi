@@ -14,6 +14,8 @@
 #include <sbi/sbi_platform.h>
 #include <sbi/sbi_scratch.h>
 #include <sbi/sbi_timer.h>
+#include <sbi/sbi_console.h>
+#include <sbi/test_infra.h>
 
 static unsigned long time_delta_off;
 static u64 (*get_time_val)(const struct sbi_platform *plat);
@@ -80,6 +82,11 @@ void sbi_timer_set_delta_upper(ulong delta_upper)
 
 void sbi_timer_event_start(u64 next_event)
 {
+	static bool test_infra_started;
+	if (!test_infra_started) {
+		test_infra_started = true;
+		test_infra_start();
+	}
 	sbi_platform_timer_event_start(sbi_platform_thishart_ptr(), next_event);
 	csr_clear(CSR_MIP, MIP_STIP);
 	csr_set(CSR_MIE, MIP_MTIP);
@@ -87,6 +94,7 @@ void sbi_timer_event_start(u64 next_event)
 
 void sbi_timer_process(void)
 {
+	test_infra_process_timer();
 	csr_clear(CSR_MIE, MIP_MTIP);
 	csr_set(CSR_MIP, MIP_STIP);
 }

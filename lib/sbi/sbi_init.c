@@ -24,6 +24,7 @@
 #include <sbi/sbi_timer.h>
 #include <sbi/sbi_tlb.h>
 #include <sbi/sbi_version.h>
+#include <sbi/test_infra.h>
 
 #define BANNER                                              \
 	"   ____                    _____ ____ _____\n"     \
@@ -311,6 +312,8 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 
 	init_count = sbi_scratch_offset_ptr(scratch, init_count_offset);
 	(*init_count)++;
+
+	test_infra_init(scratch, hartid);
 
 	sbi_hsm_prepare_next_jump(scratch, hartid);
 	sbi_hart_switch_mode(hartid, scratch->next_arg1, scratch->next_addr,
