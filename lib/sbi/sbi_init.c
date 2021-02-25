@@ -305,6 +305,7 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 	}
 
 	sbi_boot_print_hart(scratch, hartid);
+	sbi_hart_pmp_dump(scratch);
 
 	wake_coldboot_harts(scratch, hartid);
 
