@@ -177,6 +177,38 @@ unsigned int sbi_hart_pmp_addrbits(struct sbi_scratch *scratch)
 	return hfeatures->pmp_addr_bits;
 }
 
+void sbi_hart_pmp_dump(struct sbi_scratch *scratch)
+{
+	unsigned long prot, addr, size, l2l;
+	unsigned int i;
+
+	sbi_printf("\n");
+	for (i = 0; i < sbi_hart_pmp_count(scratch); i++) {
+		pmp_get(i, &prot, &addr, &l2l);
+		if (!(prot & PMP_A))
+			continue;
+		if (l2l < __riscv_xlen)
+			size = (1UL << l2l);
+		else
+			size = 0;
+#if __riscv_xlen == 32
+		sbi_printf("PMP%d    : 0x%08lx-0x%08lx (A",
+#else
+		sbi_printf("PMP%d    : 0x%016lx-0x%016lx (A",
+#endif
+			   i, addr, addr + size - 1);
+		if (prot & PMP_L)
+			sbi_printf(",L");
+		if (prot & PMP_R)
+			sbi_printf(",R");
+		if (prot & PMP_W)
+			sbi_printf(",W");
+		if (prot & PMP_X)
+			sbi_printf(",X");
+		sbi_printf(")\n");
+	}
+}
+
 int sbi_hart_pmp_configure(struct sbi_scratch *scratch)
 {
 	struct sbi_domain_memregion *reg;
