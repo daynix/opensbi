@@ -106,7 +106,7 @@ void sbi_timer_process(void)
 	if (timer_data.expired >> 32) {
 		timer_data.rounds++;
 		timer_data.expired &= 0xffffffff;
-		sbi_printf("%s: %d@%d\n", __func__, timer_data.counter, timer_data.rounds);
+		//sbi_printf("%s: %d@%d\n", __func__, timer_data.counter, timer_data.rounds);
 		timer_data.counter = 0;
 	}
 	timer_data.last_timestamp = current;

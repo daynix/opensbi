@@ -232,6 +232,10 @@ void sbi_trap_handler(struct sbi_trap_regs *regs)
 		case IRQ_M_SOFT:
 			sbi_ipi_process();
 			break;
+		case IRQ_S_EXT:
+			//sbi_printf("%s: SEXT\n", __func__);
+			while(1){}
+			goto redirect;
 		default:
 			msg = "unhandled external interrupt";
 			goto trap_error;
@@ -239,6 +243,7 @@ void sbi_trap_handler(struct sbi_trap_regs *regs)
 		return;
 	}
 
+redirect:
 	switch (mcause) {
 	case CAUSE_ILLEGAL_INSTRUCTION:
 		rc  = sbi_illegal_insn_handler(mtval, regs);

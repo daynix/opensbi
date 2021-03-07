@@ -65,6 +65,7 @@ static int sbi_ecall_legacy_handler(unsigned long extid, unsigned long funcid,
 		break;
 	case SBI_EXT_0_1_CONSOLE_GETCHAR:
 		ret = sbi_getc();
+		//sbi_printf("%s: getchar\n", __func__);
 		break;
 	case SBI_EXT_0_1_CLEAR_IPI:
 		sbi_ipi_clear_smode();

@@ -139,6 +139,7 @@ static void sbi_hsm_hart_wait(struct sbi_scratch *scratch, u32 hartid)
 	saved_mie = csr_read(CSR_MIE);
 
 	/* Set MSIE bit to receive IPI */
+	sbi_printf("%s: enabled MSIP\n", __func__);
 	csr_set(CSR_MIE, MIP_MSIP);
 
 	/* Wait for hart_add call*/

@@ -19,6 +19,7 @@
 #include <sbi/sbi_init.h>
 #include <sbi/sbi_ipi.h>
 #include <sbi/sbi_platform.h>
+#include <sbi/sbi_console.h>
 
 struct sbi_ipi_data {
 	unsigned long ipi_type;
@@ -236,6 +237,7 @@ int sbi_ipi_init(struct sbi_scratch *scratch, bool cold_boot)
 		return ret;
 
 	/* Enable software interrupts */
+	sbi_printf("%s: enabled MSIP\n", __func__);
 	csr_set(CSR_MIE, MIP_MSIP);
 
 	return 0;

@@ -119,6 +119,14 @@ static int delegate_traps(struct sbi_scratch *scratch)
 		exceptions |= (1U << CAUSE_STORE_GUEST_PAGE_FAULT);
 	}
 
+	/* no, let's preprocess external S-interrupts */
+	//interrupts &= ~MIP_SEIP;
+	//csr_set(CSR_MIE, MIP_SEIP);
+	csr_set(CSR_MIE, MIP_MEIP);
+	if (~csr_read(CSR_MIE) & MIP_MEIP) {
+		sbi_printf("%s: WARNING: CSR_MIE is not controllable!\n", __func__);
+	}
+
 	csr_write(CSR_MIDELEG, interrupts);
 	csr_write(CSR_MEDELEG, exceptions);
 

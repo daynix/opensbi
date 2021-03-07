@@ -10,6 +10,7 @@
 #include <sbi/sbi_scratch.h>
 #include <sbi_utils/fdt/fdt_helper.h>
 #include <sbi_utils/irqchip/fdt_irqchip.h>
+#include <sbi/sbi_console.h>
 
 extern struct fdt_irqchip fdt_irqchip_plic;
 
@@ -45,6 +46,7 @@ static int fdt_irqchip_cold_init(void)
 		noff = -1;
 		while ((noff = fdt_find_match(fdt, noff,
 					drv->match_table, &match)) >= 0) {
+			sbi_printf("%s: match %s\n", __func__, match->compatible);
 			if (drv->cold_init) {
 				rc = drv->cold_init(fdt, noff, match);
 				if (rc)

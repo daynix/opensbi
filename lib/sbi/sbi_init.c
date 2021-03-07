@@ -136,6 +136,7 @@ static void wait_for_coldboot(struct sbi_scratch *scratch, u32 hartid)
 	saved_mie = csr_read(CSR_MIE);
 
 	/* Set MSIE bit to receive IPI */
+	sbi_printf("%s: enabled MSIP\n", __func__);
 	csr_set(CSR_MIE, MIP_MSIP);
 
 	/* Acquire coldboot lock */
@@ -308,6 +309,7 @@ static void __noreturn init_coldboot(struct sbi_scratch *scratch, u32 hartid)
 	(*init_count)++;
 
 	sbi_hsm_prepare_next_jump(scratch, hartid);
+	sbi_printf("Initial MIE               : %08lX\n", csr_read(CSR_MIE));
 	sbi_hart_switch_mode(hartid, scratch->next_arg1, scratch->next_addr,
 			     scratch->next_mode, FALSE);
 }

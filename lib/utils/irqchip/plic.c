@@ -49,6 +49,7 @@ void plic_set_ie(struct plic_data *plic, u32 cntxid, u32 word_index, u32 val)
 
 	plic_ie = (void *)plic->addr +
 		   PLIC_ENABLE_BASE + PLIC_ENABLE_STRIDE * cntxid;
+	sbi_printf("%s: ctxid %d = %d\n", __func__, cntxid, val);
 	writel(val, plic_ie + word_index * 4);
 }
 
