@@ -59,9 +59,11 @@ enum sbi_platform_features {
 	SBI_PLATFORM_HAS_MFAULTS_DELEGATION = (1 << 2),
 	/** Platform has custom secondary hart booting support */
 	SBI_PLATFORM_HAS_HART_SECONDARY_BOOT = (1 << 3),
+	/** Platform has GPIO */
+	SBI_PLATFORM_HAS_GPIO = (1 << 4),
 
 	/** Last index of Platform features*/
-	SBI_PLATFORM_HAS_LAST_FEATURE = SBI_PLATFORM_HAS_HART_SECONDARY_BOOT,
+	SBI_PLATFORM_HAS_LAST_FEATURE = SBI_PLATFORM_HAS_GPIO,
 };
 
 /** Default feature set for a platform */

@@ -31,6 +31,9 @@ static inline char *sbi_platform_feature_id2string(unsigned long feature)
 	case SBI_PLATFORM_HAS_HART_SECONDARY_BOOT:
 		fstr = "sec_boot";
 		break;
+	case SBI_PLATFORM_HAS_GPIO:
+		fstr = "gpio";
+		break;
 	default:
 		break;
 	}
