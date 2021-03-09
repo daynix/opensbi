@@ -148,6 +148,25 @@
 				     : "memory");                  \
 	})
 
+#define csr_read64(csr)                                           \
+	({                                                      \
+		register u64 __v;                     \
+		__asm__ __volatile__("csrr %0, " __ASM_STR(csr) \
+				     : "=r"(__v)                \
+				     :                          \
+				     : "memory");               \
+		__v;                                            \
+	})
+
+#define csr_write64(csr, val)                                        \
+	({                                                         \
+		u64 __v = (val);          \
+		__asm__ __volatile__("csrw " __ASM_STR(csr) ", %0" \
+				     :                             \
+				     : "rK"(__v)                   \
+				     : "memory");                  \
+	})
+
 unsigned long csr_read_num(int csr_num);
 
 void csr_write_num(int csr_num, unsigned long val);
