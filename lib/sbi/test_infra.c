@@ -104,11 +104,13 @@ void test_infra_process_timer(void)
 	expired_high = test_data.expired >> 32;
 	if (expired_high) {
 		test_data.expired &= 0xffffffff;
-		test_data.counter = 0;
 		test_data.rounds += expired_high;
 		if (expired_high > 1) {
 			sbi_printf("%s: Missed round %u@%u\n", __func__, test_data.counter, test_data.rounds);
-		}
+		} else if (test_data.dip_data & 0x40) {
+			sbi_printf("%s: %u@%u\n", __func__, test_data.counter, test_data.rounds);
+        }
+		test_data.counter = 0;
 	}
 	test_data.last_timestamp = current;
 	if (test_data.do_measurement) {
