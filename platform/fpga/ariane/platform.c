@@ -116,6 +116,15 @@ static int ariane_irqchip_init(bool cold_boot)
 }
 
 /*
+ * Configure/query the ariane interrupt controller.
+ */
+int ariane_irqchip_request(irq_operation op, u32 irq_num, u32 value)
+{
+	u32 hartid = current_hartid();
+	return plic_request(&plic, 2 * hartid, op, irq_num, value);
+}
+
+/*
  * Initialize IPI for current HART.
  */
 static int ariane_ipi_init(bool cold_boot)
@@ -157,6 +166,7 @@ const struct sbi_platform_operations platform_ops = {
 	.console_putc = uart8250_putc,
 	.console_getc = uart8250_getc,
 	.irqchip_init = ariane_irqchip_init,
+	.irqchip_request = ariane_irqchip_request,
 	.ipi_init = ariane_ipi_init,
 	.ipi_send = clint_ipi_send,
 	.ipi_clear = clint_ipi_clear,
