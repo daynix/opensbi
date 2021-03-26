@@ -214,6 +214,7 @@ const struct sbi_platform_operations platform_ops = {
 	.console_getc		= fdt_serial_getc,
 	.console_init		= fdt_serial_init,
 	.irqchip_init		= fdt_irqchip_init,
+	.irqchip_request	= fdt_irqchip_request,
 	.irqchip_exit		= fdt_irqchip_exit,
 	.ipi_send		= fdt_ipi_send,
 	.ipi_clear		= fdt_ipi_clear,
