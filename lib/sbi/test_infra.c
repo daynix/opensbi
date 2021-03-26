@@ -125,6 +125,8 @@ void test_infra_init(struct sbi_scratch *scratch, u32 hartid)
 	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
     test_data.enable = !sbi_strcmp("ARIANE RISC-V", plat->name);
 	sbi_printf("%s: %sabled for %s\n", __func__, test_data.enable ? "en" : "dis", plat->name);
+	//enable external interrupts for M-mode
+	csr_set(CSR_MIE, MIP_MEIP);
 
 	sbi_platform_irqchip_request(plat, IRQ_OP_PRIORITY, external_source, 1);
 	sbi_platform_irqchip_request(plat, IRQ_OP_THRESHOLD, external_source, 0);
