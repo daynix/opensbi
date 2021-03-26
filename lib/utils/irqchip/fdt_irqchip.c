@@ -72,3 +72,10 @@ int fdt_irqchip_init(bool cold_boot)
 
 	return fdt_irqchip_warm_init();
 }
+
+int fdt_irqchip_request(irq_operation op, u32 irq_num, u32 value)
+{
+	if (current_driver && current_driver->request)
+		return current_driver->request(op, irq_num, value);
+	return 0;
+}
