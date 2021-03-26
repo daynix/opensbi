@@ -106,6 +106,14 @@ static int irqchip_plic_cold_init(void *fdt, int nodeoff,
 	return irqchip_plic_update_hartid_table(fdt, nodeoff, pd);
 }
 
+int irqchip_plic_request(irq_operation op, u32 irq_num, u32 value)
+{
+	u32 hartid = current_hartid();
+	return plic_request(plic_hartid2data[hartid],
+				      plic_hartid2context[hartid][0],
+				      op, irq_num, value);
+}
+
 static const struct fdt_match irqchip_plic_match[] = {
 	{ .compatible = "riscv,plic0" },
 	{ .compatible = "sifive,plic-1.0.0" },
@@ -116,5 +124,6 @@ struct fdt_irqchip fdt_irqchip_plic = {
 	.match_table = irqchip_plic_match,
 	.cold_init = irqchip_plic_cold_init,
 	.warm_init = irqchip_plic_warm_init,
+	.request   = irqchip_plic_request,
 	.exit = NULL,
 };
