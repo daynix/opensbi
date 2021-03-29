@@ -6,8 +6,6 @@
 #include <sbi/sbi_string.h>
 #include <sbi/test_infra.h>
 
-u32 __attribute__((weak))  external_source = 25;
-
 static struct
 {
 	u64 last_timestamp;
@@ -123,14 +121,20 @@ void test_infra_process_timer(void)
 void test_infra_init(struct sbi_scratch *scratch, u32 hartid)
 {
 	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
+	u32 int_source;
     test_data.enable = !sbi_strcmp("ARIANE RISC-V", plat->name);
 	sbi_printf("%s: %sabled for %s\n", __func__, test_data.enable ? "en" : "dis", plat->name);
-	//enable external interrupts for M-mode
-	csr_set(CSR_MIE, MIP_MEIP);
+	int_source = sbi_platform_irqchip_request(plat, IRQ_OP_SOURCE, 0, 0);
+	if (int_source) {
+		sbi_printf("%s: configuring IRQ %u\n", __func__, int_source);
+		//enable external interrupts for M-mode
+		csr_set(CSR_MIE, MIP_MEIP);
 
-	sbi_platform_irqchip_request(plat, IRQ_OP_PRIORITY, external_source, 1);
-	sbi_platform_irqchip_request(plat, IRQ_OP_THRESHOLD, external_source, 0);
-	sbi_platform_irqchip_request(plat, IRQ_OP_ENABLE, external_source, 1);
+		sbi_platform_irqchip_request(plat, IRQ_OP_PRIORITY, int_source, 1);
+		sbi_platform_irqchip_request(plat, IRQ_OP_THRESHOLD, int_source, 0);
+		sbi_platform_irqchip_request(plat, IRQ_OP_ENABLE, int_source, 1);
+		sbi_platform_irqchip_request(plat, IRQ_OP_TIMER, int_source, 1000000);
+	}
 }
 
 void test_infra_start(void)
@@ -149,6 +153,7 @@ void test_infra_process_irq(void)
 	u32 irq = sbi_platform_irqchip_request(plat, IRQ_OP_CLAIM, 0, 0);
 	if (irq) {
 		sbi_printf("%s, irq %u\n", __func__, irq);
+		sbi_platform_irqchip_request(plat, IRQ_OP_TIMER, irq, 1000000);
 		sbi_platform_irqchip_request(plat, IRQ_OP_COMPLETE, irq, 0);
 	} else {
 		sbi_printf("%s, no irq\n", __func__);

@@ -56,11 +56,13 @@ typedef unsigned long		physical_size_t;
 
 typedef enum irq_operation
 {
+	IRQ_OP_SOURCE, 		/* (get) no arg, returns 0 or source number */
 	IRQ_OP_ENABLE, 		/* (set) IRQ source, value 0/1 */
 	IRQ_OP_PRIORITY,    /* (set) IRQ source, value */
 	IRQ_OP_THRESHOLD,	/* (set) IRQ source, value */
 	IRQ_OP_CLAIM,		/* (get) no arg, returns value */
 	IRQ_OP_COMPLETE,	/* (set) IRQ source */
+	IRQ_OP_TIMER, 		/* (set) IRQ source, time in units */
 } irq_operation;
 
 #define TRUE			1

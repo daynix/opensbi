@@ -21,6 +21,7 @@
 #include <sbi_utils/timer/fdt_timer.h>
 #include <sbi_utils/ipi/fdt_ipi.h>
 #include <sbi_utils/reset/fdt_reset.h>
+#include <goldfish_rtc.h>
 
 extern const struct platform_override sifive_fu540;
 
@@ -204,6 +205,21 @@ static void generic_system_reset(u32 reset_type, u32 reset_reason)
 	fdt_system_reset(reset_type, reset_reason);
 }
 
+static int generic_irq_chip_request(irq_operation op, u32 irq_num, u32 value)
+{
+	switch (op) {
+		case IRQ_OP_SOURCE:
+			{
+				return rtc_get_irq();
+			}
+		case IRQ_OP_TIMER:
+			value ? rtc_restart(value) : rtc_stop();
+			return 0;
+		default:
+			return fdt_irqchip_request(op, irq_num, value);
+	}
+}
+
 const struct sbi_platform_operations platform_ops = {
 	.early_init		= generic_early_init,
 	.final_init		= generic_final_init,
@@ -214,7 +230,7 @@ const struct sbi_platform_operations platform_ops = {
 	.console_getc		= fdt_serial_getc,
 	.console_init		= fdt_serial_init,
 	.irqchip_init		= fdt_irqchip_init,
-	.irqchip_request	= fdt_irqchip_request,
+	.irqchip_request	= generic_irq_chip_request,
 	.irqchip_exit		= fdt_irqchip_exit,
 	.ipi_send		= fdt_ipi_send,
 	.ipi_clear		= fdt_ipi_clear,
