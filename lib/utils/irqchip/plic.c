@@ -13,6 +13,7 @@
 #include <sbi/sbi_error.h>
 #include <sbi/sbi_string.h>
 #include <sbi_utils/irqchip/plic.h>
+#include <sbi/sbi_console.h>
 
 #define PLIC_PRIORITY_BASE 0x0
 #define PLIC_PENDING_BASE 0x1000
@@ -50,6 +51,25 @@ void plic_set_ie(struct plic_data *plic, u32 cntxid, u32 word_index, u32 val)
 	plic_ie = (void *)plic->addr +
 		   PLIC_ENABLE_BASE + PLIC_ENABLE_STRIDE * cntxid;
 	writel(val, plic_ie + word_index * 4);
+}
+
+void plic_set_ie_bit(struct plic_data *plic, u32 cntxid, u32 word_index, u32 val, bool set_clear)
+{
+	volatile u32 *plic_ie;
+
+	if (!plic)
+		return;
+
+	plic_ie = (u32 *)(plic->addr + PLIC_ENABLE_BASE + PLIC_ENABLE_STRIDE * cntxid);
+	plic_ie += word_index;
+
+	if (set_clear) {
+		val |= *plic_ie;
+	} else {
+		val = *plic_ie & ~val;
+	}
+
+	writel(val, plic_ie);
 }
 
 int plic_warm_irqchip_init(struct plic_data *plic,
@@ -97,4 +117,62 @@ int plic_cold_irqchip_init(struct plic_data *plic)
 		plic_set_priority(plic, i, 0);
 
 	return 0;
+}
+
+static int plic_claim(struct plic_data *plic, u32 cntxid)
+{
+	volatile u32 *plic_thresh;
+
+	if (!plic)
+		return 0;
+
+	plic_thresh = (u32 *)(plic->addr + PLIC_CONTEXT_BASE + PLIC_CONTEXT_STRIDE * cntxid);
+
+	return *(plic_thresh + 1);
+}
+
+static void plic_complete(struct plic_data *plic, u32 cntxid, u32 irq)
+{
+	volatile u32 *plic_thresh;
+
+	if (!plic)
+		return;
+
+	plic_thresh = (u32 *)(plic->addr + PLIC_CONTEXT_BASE + PLIC_CONTEXT_STRIDE * cntxid);
+
+	writel(irq, plic_thresh + 1);
+}
+
+int plic_request(struct plic_data *plic, u32 cntxid, irq_operation op,
+				  u32 irq_num, u32 value)
+{
+	int ret = 0;
+
+	if (irq_num >= plic->num_src) {
+		sbi_printf("%s: invalid irq %u >= %lu\n",
+			__func__, irq_num, plic->num_src);
+		return SBI_EINVAL;
+	}
+
+	switch (op) {
+		case IRQ_OP_ENABLE:
+			plic_set_ie_bit(plic, cntxid, irq_num/32, 1 << (irq_num % 32), value != 0);
+			break;
+		case IRQ_OP_PRIORITY:
+			plic_set_priority(plic, irq_num, value);
+			break;
+		case IRQ_OP_THRESHOLD:
+			plic_set_thresh(plic, cntxid, value);
+			break;
+		case IRQ_OP_CLAIM:
+			ret = plic_claim(plic, cntxid);
+			break;
+		case IRQ_OP_COMPLETE:
+			plic_complete(plic, cntxid, irq_num);
+			break;
+		default:
+			ret = SBI_EINVAL;
+			break;
+	}
+	return ret;
 }

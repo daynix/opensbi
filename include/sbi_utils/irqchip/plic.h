@@ -26,4 +26,7 @@ void plic_set_thresh(struct plic_data *plic, u32 cntxid, u32 val);
 
 void plic_set_ie(struct plic_data *plic, u32 cntxid, u32 word_index, u32 val);
 
+int plic_request(struct plic_data *plic, u32 cntxid, irq_operation op,
+				  u32 irq_num, u32 value);
+
 #endif
