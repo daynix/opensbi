@@ -18,6 +18,7 @@ static struct
 	u64 perf_counter_val;
 } test_data = {};
 
+#define TIMER_PERIOD 	100000000
 #define NOF_REGISTERS	15
 
 typedef u64 (*csr_reader)(void);
@@ -133,7 +134,7 @@ void test_infra_init(struct sbi_scratch *scratch, u32 hartid)
 		sbi_platform_irqchip_request(plat, IRQ_OP_PRIORITY, int_source, 1);
 		sbi_platform_irqchip_request(plat, IRQ_OP_THRESHOLD, int_source, 0);
 		sbi_platform_irqchip_request(plat, IRQ_OP_ENABLE, int_source, 1);
-		sbi_platform_irqchip_request(plat, IRQ_OP_TIMER, int_source, 1000000);
+		sbi_platform_irqchip_request(plat, IRQ_OP_TIMER, int_source, TIMER_PERIOD);
 	}
 }
 
@@ -153,7 +154,7 @@ void test_infra_process_irq(void)
 	u32 irq = sbi_platform_irqchip_request(plat, IRQ_OP_CLAIM, 0, 0);
 	if (irq) {
 		sbi_printf("%s, irq %u\n", __func__, irq);
-		sbi_platform_irqchip_request(plat, IRQ_OP_TIMER, irq, 1000000);
+		sbi_platform_irqchip_request(plat, IRQ_OP_TIMER, irq, TIMER_PERIOD);
 		sbi_platform_irqchip_request(plat, IRQ_OP_COMPLETE, irq, 0);
 	} else {
 		sbi_printf("%s, no irq\n", __func__);
