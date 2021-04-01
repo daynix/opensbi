@@ -115,12 +115,43 @@ static int ariane_irqchip_init(bool cold_boot)
 	return plic_ariane_warm_irqchip_init(2 * hartid, 2 * hartid + 1);
 }
 
+#define USE_APB_TIMER	1
+#if USE_APB_TIMER
+/* APB TIMER CMP interrupt */
+#define M_TIMER_INTERRUPT	5
+#define RTC(offset) (volatile u32 *)(0x18000000 + offset)
+#define RTC_TIME            0x00
+#define RTC_CTL             0x04
+#define RTC_CMP             0x08
+static void rtc_restart(u32 value)
+{
+	*RTC(RTC_CMP) = *RTC(RTC_TIME) + value;
+	*RTC(RTC_CTL) = 1;
+}
+#else
+#define M_TIMER_INTERRUPT	16
+static void rtc_restart(u32 value)
+{
+	// TBD
+}
+#endif
 /*
  * Configure/query the ariane interrupt controller.
  */
 int ariane_irqchip_request(irq_operation op, u32 irq_num, u32 value)
 {
 	u32 hartid = current_hartid();
+	switch (op) {
+		case IRQ_OP_SOURCE:
+		{
+			return M_TIMER_INTERRUPT;
+		}
+		case IRQ_OP_TIMER:
+			rtc_restart(value);
+			return 0;
+		default:
+			break;
+	}
 	return plic_request(&plic, 2 * hartid, op, irq_num, value);
 }
 
