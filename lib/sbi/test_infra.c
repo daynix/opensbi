@@ -92,11 +92,11 @@ static void do_measurement()
 	}
 }
 
-void test_infra_process_timer(void)
+static void test_infra_process_timer(void)
 {
 	u64 current, delta, expired_high;
-    if (!test_data.enable)
-        return;
+	if (!test_data.enable)
+		return;
 
     current = csr_read64(CSR_MCYCLE);
 	delta = current - test_data.last_timestamp;
@@ -123,11 +123,20 @@ void test_infra_init(struct sbi_scratch *scratch, u32 hartid)
 {
 	const struct sbi_platform *plat = sbi_platform_ptr(scratch);
 	u32 int_source;
-    test_data.enable = !sbi_strcmp("ARIANE RISC-V", plat->name);
-	sbi_printf("%s: %sabled for %s\n", __func__, test_data.enable ? "en" : "dis", plat->name);
 	int_source = sbi_platform_irqchip_request(plat, IRQ_OP_SOURCE, 0, 0);
 	if (int_source) {
 		sbi_printf("%s: configuring IRQ %u\n", __func__, int_source);
+		test_data.enable = true;
+
+		test_data.do_measurement =
+			sbi_platform_get_features(sbi_platform_thishart_ptr()) & SBI_PLATFORM_HAS_GPIO;
+		sbi_printf("%s, test data %p\n", __func__, &test_data);
+#if 0 // uncomment for permanent printouts on VM
+		if (!test_data.do_measurement) {
+			test_data.dip_data = 0x40;
+		}
+#endif
+		test_data.last_timestamp = csr_read64(CSR_MCYCLE);
 		//enable external interrupts for M-mode
 		csr_set(CSR_MIE, MIP_MEIP);
 
@@ -138,24 +147,15 @@ void test_infra_init(struct sbi_scratch *scratch, u32 hartid)
 	}
 }
 
-void test_infra_start(void)
-{
-	if (test_data.enable && !test_data.counter && !test_data.rounds) {
-
-		test_data.do_measurement = 
-			sbi_platform_get_features(sbi_platform_thishart_ptr()) & SBI_PLATFORM_HAS_GPIO;
-		sbi_printf("%s, test data %p\n", __func__, &test_data);
-	}
-}
-
 void test_infra_process_irq(void)
 {
 	const struct sbi_platform *plat = sbi_platform_thishart_ptr();
 	u32 irq = sbi_platform_irqchip_request(plat, IRQ_OP_CLAIM, 0, 0);
 	if (irq) {
-		sbi_printf("%s, irq %u\n", __func__, irq);
+//		sbi_printf("%s, irq %u\n", __func__, irq);
 		sbi_platform_irqchip_request(plat, IRQ_OP_TIMER, irq, TIMER_PERIOD);
 		sbi_platform_irqchip_request(plat, IRQ_OP_COMPLETE, irq, 0);
+		test_infra_process_timer();
 	} else {
 		sbi_printf("%s, no irq\n", __func__);
 	}
