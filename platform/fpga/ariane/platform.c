@@ -115,11 +115,14 @@ static int ariane_irqchip_init(bool cold_boot)
 	return plic_ariane_warm_irqchip_init(2 * hartid, 2 * hartid + 1);
 }
 
-#define USE_APB_TIMER	1
-#if USE_APB_TIMER
-/* APB TIMER CMP interrupt */
-#define M_TIMER_INTERRUPT	5
-#define RTC(offset) (volatile u32 *)(0x18000000 + offset)
+#define USE_APB_TIMER	3
+//#define USE_SHIRI_BLOCK
+//#define DO_TEST         1
+#if defined(USE_APB_TIMER)
+/* APB TIMER #N CMP interrupt */
+#define M_TIMER_INTERRUPT	(5 + USE_APB_TIMER * 2)
+#define APB_TIMER_STRIDE	0x10
+#define RTC(offset) (volatile u32 *)(0x18000000 + (APB_TIMER_STRIDE * USE_APB_TIMER) + (offset))
 #define RTC_TIME            0x00
 #define RTC_CTL             0x04
 #define RTC_CMP             0x08
@@ -128,12 +131,92 @@ static void rtc_restart(u32 value)
 	*RTC(RTC_CMP) = *RTC(RTC_TIME) + value;
 	*RTC(RTC_CTL) = 1;
 }
-#else
+
+static void rtc_stop()
+{
+	sbi_printf("Using APB timer %u, stride 0x%x\n", USE_APB_TIMER, APB_TIMER_STRIDE);
+}
+#elif defined(USE_SHIRI_BLOCK)
 #define M_TIMER_INTERRUPT	16
+#define RTC(offset) (volatile u32 *)(0x50000000 + offset)
+#define RTC_VER             0x00
+#define RTC_CMP             0x04
+#define RTC_CTL             0x08
+#define RTC_TIME            0x0C
+#define RTC_ENABLE			0x01
+#define RTC_SELECT			0x02
+#define RTC_EDGE			0x04
+#define RTC_LEVEL			0x00
+#define RTC_START			0x08
+#define RTC_INTR			RTC_LEVEL
+//#define RTC_INTR			RTC_EDGE
+#define RTC_STOPPED			(RTC_INTR)
+#define RTC_STARTED			(RTC_INTR | RTC_START | RTC_ENABLE)
 static void rtc_restart(u32 value)
 {
-	// TBD
+	*RTC(RTC_CTL) = RTC_STOPPED;
+	*RTC(RTC_CMP) = *RTC(RTC_TIME) + value;
+	*RTC(RTC_CTL) = RTC_STARTED;
 }
+
+static void rtc_stop()
+{
+	sbi_printf("Using Shiri's timer, v. 0x%x\n", *RTC(RTC_VER));
+	*RTC(RTC_CTL) = RTC_STOPPED;
+}
+#elif DO_TEST
+#define M_TIMER_INTERRUPT	0
+#define RTC(offset) (volatile u32 *)((unsigned long)0x18000000 + offset)
+static void rtc_restart(u32 value) {}
+
+static void test_reg(u32 offset)
+{
+	u32 val, addr = offset;
+	sbi_printf("Testing address 0x%x\n", addr);
+	val = *RTC(addr);
+	sbi_printf("Read [0x%x] = %x\n", addr, val);
+	addr = offset + 4;
+	val = 1;
+	sbi_printf("Writing [0x%x] = %x\n", addr, val);
+	*RTC(addr) = val;
+	val = *RTC(addr);
+	sbi_printf("Read [0x%x] = %x\n", addr, val);
+	addr = offset;
+	val = *RTC(addr);
+	sbi_printf("Read [0x%x] = %x\n", addr, val);
+	val = *RTC(addr);
+	sbi_printf("Read [0x%x] = %x\n", addr, val);
+	val = *RTC(addr);
+	sbi_printf("Read [0x%x] = %x\n", addr, val);
+	addr = offset + 8;
+	val = 0;
+	sbi_printf("Writing [0x%x] = %x\n", addr, val);
+	*RTC(addr) = val;
+	val = *RTC(addr);
+	sbi_printf("Read [0x%x] = %x\n", addr, val);
+	addr = offset;
+	val = *RTC(addr);
+	sbi_printf("Read [0x%x] = %x\n", addr, val);
+	addr = offset + 4;
+	val = 0;
+	sbi_printf("Writing [0x%x] = %x\n", addr, val);
+	*RTC(addr) = val;
+}
+
+static void rtc_stop()
+{
+	test_reg(0x00);
+	test_reg(0x0C);
+	test_reg(0x10);
+	test_reg(0x18);
+	test_reg(0x20);
+	test_reg(0x24);
+	test_reg(0x28);
+	test_reg(0x2C);
+	test_reg(0x30);
+}
+
+#else
 #endif
 /*
  * Configure/query the ariane interrupt controller.
@@ -144,6 +227,7 @@ int ariane_irqchip_request(irq_operation op, u32 irq_num, u32 value)
 	switch (op) {
 		case IRQ_OP_SOURCE:
 		{
+			rtc_stop();
 			return M_TIMER_INTERRUPT;
 		}
 		case IRQ_OP_TIMER:
