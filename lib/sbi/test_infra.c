@@ -152,7 +152,7 @@ void test_infra_process_irq(void)
 	const struct sbi_platform *plat = sbi_platform_thishart_ptr();
 	u32 irq = sbi_platform_irqchip_request(plat, IRQ_OP_CLAIM, 0, 0);
 	if (irq) {
-//		sbi_printf("%s, irq %u\n", __func__, irq);
+		sbi_printf("%s, irq %u\n", __func__, irq);
 		sbi_platform_irqchip_request(plat, IRQ_OP_TIMER, irq, TIMER_PERIOD);
 		sbi_platform_irqchip_request(plat, IRQ_OP_COMPLETE, irq, 0);
 		test_infra_process_timer();
