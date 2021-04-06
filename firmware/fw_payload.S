@@ -93,5 +93,7 @@ payload_bin:
 	wfi
 	j	payload_bin
 #else
-	.incbin	FW_PAYLOAD_PATH
+	/* .incbin	FW_PAYLOAD_PATH */
+	wfi
+	j	payload_bin
 #endif
