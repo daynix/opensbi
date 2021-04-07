@@ -18,7 +18,8 @@ static struct
 	u64 perf_counter_val;
 } test_data = {};
 
-#define TIMER_PERIOD 	100000000
+/* should be 5 ms at 50 MHz */
+#define TIMER_PERIOD 	250000
 #define NOF_REGISTERS	15
 
 typedef u64 (*csr_reader)(void);
