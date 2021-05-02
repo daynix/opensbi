@@ -19,6 +19,7 @@ static struct
 } test_data = {};
 
 #define TIMER_PERIOD 	100000000
+//#define TIMER_PERIOD 	250000
 #define NOF_REGISTERS	15
 
 typedef u64 (*csr_reader)(void);
