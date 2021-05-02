@@ -115,8 +115,8 @@ static int ariane_irqchip_init(bool cold_boot)
 	return plic_ariane_warm_irqchip_init(2 * hartid, 2 * hartid + 1);
 }
 
-//#define USE_APB_TIMER	3
-#define USE_SHIRI_BLOCK
+#define USE_APB_TIMER     1
+//#define USE_SHIRI_BLOCK
 //#define DO_TEST         1
 #if defined(USE_APB_TIMER)
 /* APB TIMER #N CMP interrupt */
