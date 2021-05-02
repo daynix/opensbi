@@ -138,7 +138,7 @@ static void rtc_stop()
 }
 #elif defined(USE_SHIRI_BLOCK)
 #define M_TIMER_INTERRUPT	16
-#define RTC(offset) (volatile u32 *)(0x50000000 + offset)
+#define RTC(offset) (volatile u32 *)(0xD000000 + offset)
 #define RTC_VER             0x00
 #define RTC_CMP             0x04
 #define RTC_CTL             0x08
